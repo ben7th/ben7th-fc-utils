@@ -7,7 +7,11 @@ const onlyConnect = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
-    dbName: DB_NAME
+    dbName: DB_NAME,
+
+    // 2020.11.17
+    // see: https://mongoosejs.com/docs/deprecations.html#findandmodify
+    useFindAndModify: false
   })
 }
 
