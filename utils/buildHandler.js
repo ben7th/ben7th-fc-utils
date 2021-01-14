@@ -19,7 +19,7 @@ const buildHandler = ({ apis }) => {
     }
   
     resp.setStatusCode(404)
-    respJSON(resp, { error: 'no such API PATH', path: req.path })
+    respJSON(resp, { error: 'no such API PATH, 没有这个微服务路径', path: req.path })
   }
 }
 
