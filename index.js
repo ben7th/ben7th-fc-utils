@@ -11,12 +11,14 @@ const postMethod = require('./utils/postMethod')
 const genSID = require('./utils/genSID')
 
 const getOssClient = require('./utils/getOssClient')
+const SampleModule = require('./utils/SampleModule')
 
 module.exports = { 
   db,
   respJSON,
   getJsonBody, 
   buildHandler, define, buildHandlerMeta,
+  SampleModule,
   postMethod, 
   genSID,
   getOssClient
