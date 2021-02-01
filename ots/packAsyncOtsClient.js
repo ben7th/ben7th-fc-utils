@@ -11,7 +11,8 @@ const _AsyncOtsMethod = async (method, { otsClient, params }) => {
 // 包装原本的 OtsClient 使得可以以 await 的方式被调用
 const packAsyncOtsClient = (otsClient) => {
   let methods = [
-    'putRow', 'getRow', 'getRange'
+    'putRow', 'getRow', 'getRange',
+    'batchWriteRow', // 2021.02.01
   ]
 
   let res = {}

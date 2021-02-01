@@ -153,6 +153,19 @@ class OtsTable {
     return { list, otsResponse }
   }
 
+  async deleteAllWithFieldValue ({ field, value }) {
+    // 先查询，然后执行多行删除
+    let { list } = await this.listAllWithFieldValue({ field, value })
+    let _dataList = list.map(x => x.data)
+    let primaryKeys = _dataList.map(x => {
+      return _packOtsValueArray({ columnDefines: this.keys, rawData: x })
+    })
+    let tableName = this.tableName
+    let params = _buildDeleteRowsParams({ tableName, primaryKeys })
+    let otsResponse = await this.asyncOtsClient.batchWriteRow(params)
+    return { otsResponse }
+  }
+
   /* 返回结果的示例数据结构：
   {
     primaryKey: [ { name: 'abbr', value: 'test-114514' } ],
@@ -252,6 +265,26 @@ const _ots_to_raw = ({ columnOtsValue, type }) => {
   return columnRawValue
 }
 
+const CONDITION_ROW_EXIST_IGNORE = new TableStore.Condition(TableStore.RowExistenceExpectation.IGNORE, null)
+
+const _buildDeleteRowsParams = ({ tableName, primaryKeys }) => {
+  // https://help.aliyun.com/document_detail/56355.html?spm=a2c4g.11186623.6.1003.13261201rjtSfC
+  return {
+    tables: [
+      {
+        tableName, // 传入
+        rows: primaryKeys.map(primaryKey => {
+          return {
+            type: 'DELETE',
+            condition: CONDITION_ROW_EXIST_IGNORE,
+            primaryKey
+          }
+        })
+      }
+    ]
+  }
+}
+
 // 组织单行查询参数
 const _buildGetRowParams = ({ tableName, primaryKey }) => {
   return {
@@ -267,7 +300,7 @@ const _buildGetRowParams = ({ tableName, primaryKey }) => {
 const _buildPutRowParams = ({ tableName, primaryKey, attributeColumns }) => {
   return {
     tableName, // 传入
-    condition: new TableStore.Condition(TableStore.RowExistenceExpectation.IGNORE, null),
+    condition: CONDITION_ROW_EXIST_IGNORE,
     primaryKey, // 传入
     attributeColumns, // 传入
     returnContent: { returnType: TableStore.ReturnType.Primarykey }
