@@ -44,8 +44,8 @@ class OtsTable {
   // 写数据
   async putData (rawData) {
     // 先尝试读数据，主要是为了不覆盖 createdAt
-    let getRes = await this.getData(rawData)
-    let ts = getRes.timestamps
+    let _getRes = await this.getData(rawData)
+    let ts = _getRes.timestamps
     let oldCreatedAt = ts ? ts.createdAt : null
 
     let tableName = this.tableName
@@ -71,6 +71,7 @@ class OtsTable {
   }
 
   // 读数据
+  // 如果没有读到数据，返回结果的 data 为 null
   async getData (keysData) {
     let tableName = this.tableName
 
