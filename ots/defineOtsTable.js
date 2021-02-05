@@ -266,7 +266,7 @@ class OtsTable {
 
 // 将传入的数据组织成 OTS 参数格式数组
 const _packOtsValueArray = ({ columnDefines, rawData }) => {
-  console.log('_packOtsValueArray', { columnDefines, rawData })
+  // console.log('_packOtsValueArray', { columnDefines, rawData })
   return Object.entries(columnDefines).map(([columnName, type]) => {
     let columnRawValue = rawData[columnName]
     let columnOtsValue = _raw_to_ots({ columnRawValue, type })
