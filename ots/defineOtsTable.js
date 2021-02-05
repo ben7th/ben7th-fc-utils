@@ -42,6 +42,8 @@ class OtsTable {
   }
 
   // 写数据
+  // 如果主键相同，会覆盖该行全部数据
+  // 但不会覆盖 createdAt TODO 因为已经实现了 updateData 需要去掉这个特性
   async putData (rawData) {
     // 先尝试读数据，主要是为了不覆盖 createdAt
     let _getRes = await this.getData(rawData)
@@ -68,6 +70,46 @@ class OtsTable {
     let timestamps = { createdAt: rawCreatedAt, updatedAt: rawUpdatedAt }
 
     return { data: rawData, timestamps, otsResponse }
+  }
+
+  // 更新数据
+  // 需要传两个参数：
+  // primaryKeysData 用于查询旧数据
+  // newRawData 用于更新数据
+  // 旧数据已经存在的属性不会被覆盖
+  async updateData (primaryKeysData, newRawData) {
+    // 先读旧数据
+    let _getRes = await this.getData(primaryKeysData)
+    if (!_getRes.data) {
+      throw new Error('updateData: 要更新的旧数据不存在')
+    }
+    let oldRawData = _getRes.data
+    let oldTimestamps = _getRes.timestamps
+
+    let mergedRawData = Object.assign({}, oldRawData, newRawData, primaryKeysData)
+
+    let tableName = this.tableName
+    let primaryKey = _packOtsValueArray({ 
+      columnDefines: this.keys, rawData: mergedRawData })
+    let attributeColumns = _packOtsValueArray({ 
+      columnDefines: this.columns, rawData: mergedRawData })
+
+    // 增加时间戳数据
+    let now = new Date()
+    let rawCreatedAt = oldTimestamps.createdAt
+    let rawUpdatedAt = now
+
+    let otsCreatedAt = _raw_to_ots({ columnRawValue: rawCreatedAt, type: DATA_TYPES.DATE })
+    let otsUpdatedAt = _raw_to_ots({ columnRawValue: rawUpdatedAt, type: DATA_TYPES.DATE })
+
+    attributeColumns.push({ createdAt: otsCreatedAt })
+    attributeColumns.push({ updatedAt: otsUpdatedAt })
+
+    let params = _buildPutRowParams({ tableName, primaryKey, attributeColumns })
+    let otsResponse = await this.asyncOtsClient.putRow(params)
+    let timestamps = { createdAt: rawCreatedAt, updatedAt: rawUpdatedAt }
+
+    return { data: mergedRawData, timestamps, otsResponse }
   }
 
   // 读数据
@@ -224,6 +266,7 @@ class OtsTable {
 
 // 将传入的数据组织成 OTS 参数格式数组
 const _packOtsValueArray = ({ columnDefines, rawData }) => {
+  console.log('_packOtsValueArray', { columnDefines, rawData })
   return Object.entries(columnDefines).map(([columnName, type]) => {
     let columnRawValue = rawData[columnName]
     let columnOtsValue = _raw_to_ots({ columnRawValue, type })
